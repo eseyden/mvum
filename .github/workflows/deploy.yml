@@ -28,6 +28,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    # Current GDAL with PDF rendering. Ubuntu's packaged GDAL (3.8) silently writes PNG
+    # tiles when asked for WEBP, roughly tripling map download sizes.
+    container: ghcr.io/osgeo/gdal:ubuntu-full-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -36,12 +39,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install GDAL and pmtiles
+      - name: Install pmtiles
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq gdal-bin
           curl -sSL "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin pmtiles
+            | tar -xz -C /usr/local/bin pmtiles
           gdalinfo --version
           gdalinfo --formats | grep -E '^\s*(PDF|MBTiles|WEBP)'
           pmtiles version
@@ -52,8 +53,8 @@ jobs:
           path: |
             data/cache
             public/maps
-          key: mvum-data-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: mvum-data-
+          key: mvum-data-v2-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: mvum-data-v2-
 
       - run: npm ci
 
@@ -67,7 +68,7 @@ jobs:
           path: |
             data/cache
             public/maps
-          key: mvum-data-${{ github.run_id }}-${{ github.run_attempt }}
+          key: mvum-data-v2-${{ github.run_id }}-${{ github.run_attempt }}
 
       - run: npm run build
 
