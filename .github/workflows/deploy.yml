@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Current GDAL with PDF rendering. Ubuntu's packaged GDAL (3.8) silently writes PNG
     # tiles when asked for WEBP, roughly tripling map download sizes.
-    container: ghcr.io/osgeo/gdal:ubuntu-full-latest
+    container: ghcr.io/osgeo/gdal:ubuntu-full-3.13.3
     steps:
       - uses: actions/checkout@v4
 
