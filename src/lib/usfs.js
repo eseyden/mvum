@@ -7,6 +7,22 @@ export const LAYERS = /** @type {const} */ ({ roads: 1, trails: 2 });
 
 const PAGE_SIZE = 1000;
 
+/**
+ * fetch() that retries network errors and 5xx/429 responses with backoff.
+ * @param {string} url @param {RequestInit} [init] @param {number} [attempts]
+ */
+export async function fetchWithRetry(url, init, attempts = 4) {
+  for (let i = 1; ; i++) {
+    try {
+      const res = await fetch(url, init);
+      if (res.ok || i >= attempts || (res.status < 500 && res.status !== 429)) return res;
+    } catch (err) {
+      if (i >= attempts) throw err;
+    }
+    await new Promise((r) => setTimeout(r, 1000 * 2 ** i));
+  }
+}
+
 // Attributes worth shipping to the client; everything else is dropped to keep the payload small.
 const KEEP_PROPS =
   /^(id|name|bmp|emp|seasonal|mvum_symbol_name|districtname|surfacetype|operationalmaintlevel|trailclass|.*_datesopen|e_bike_class\d(_dur)?)$/;
@@ -36,7 +52,7 @@ export async function fetchLayer(name, onPage) {
   const features = [];
   for (let offset = 0; ; offset += PAGE_SIZE) {
     const url = layerQueryUrl(LAYERS[name], offset);
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${url}`);
     const json = await res.json();
     if (json.error) throw new Error(`${name}: ${JSON.stringify(json.error)}`);

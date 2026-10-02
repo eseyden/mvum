@@ -47,18 +47,27 @@ jobs:
           pmtiles version
 
       # Reuse downloaded PDFs and generated tiles so unchanged maps aren't re-tiled.
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: |
             data/cache
             public/maps
-          key: mvum-data-${{ github.run_id }}
+          key: mvum-data-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: mvum-data-
 
       - run: npm ci
 
       - name: Build map tiles and data snapshot
         run: npm run data -- ${{ inputs.force && '--force' || '' }}
+
+      # Save even on failure so a re-run resumes instead of re-tiling every map.
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            data/cache
+            public/maps
+          key: mvum-data-${{ github.run_id }}-${{ github.run_attempt }}
 
       - run: npm run build
 

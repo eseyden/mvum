@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchLayer, MVUM_SERVICE, FOREST_WHERE } from '../src/lib/usfs.js';
+import { fetchLayer, fetchWithRetry, MVUM_SERVICE, FOREST_WHERE } from '../src/lib/usfs.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE = join(ROOT, 'data/cache');
@@ -33,7 +33,7 @@ const log = (...m) => console.log('[build-data]', ...m);
 const run = (cmd, argv, opts = {}) => execFileSync(cmd, argv, { stdio: ['ignore', 'pipe', 'inherit'], maxBuffer: 1 << 28, ...opts }).toString();
 
 async function fetchOk(url, init) {
-  const res = await fetch(url, { headers: { 'User-Agent': 'mvum-pwa-build/1.0' }, redirect: 'follow', ...init });
+  const res = await fetchWithRetry(url, { headers: { 'User-Agent': 'mvum-pwa-build/1.0' }, redirect: 'follow', ...init });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${url}`);
   return res;
 }
