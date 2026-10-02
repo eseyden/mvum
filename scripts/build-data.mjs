@@ -108,7 +108,8 @@ function tileMap(map, pdf) {
   // Render the page, clip to the map neatline, reproject to Web Mercator.
   run('gdalwarp', [
     '-oo', `DPI=${DPI}`,
-    '-cutline', cutline, '-cutline_srs', srsFile, '-crop_to_cutline',
+    // The WGS84 footprint carries its own CRS (-cutline_srs needs GDAL >= 3.9).
+    '-cutline', footprintFile, '-crop_to_cutline',
     '-t_srs', 'EPSG:3857', '-r', 'bilinear', '-dstalpha',
     '-co', 'COMPRESS=DEFLATE', '-co', 'TILED=YES', '-co', 'BIGTIFF=IF_SAFER',
     '-multi', '-wo', 'NUM_THREADS=ALL_CPUS',
