@@ -1,0 +1,77 @@
+name: Build data and deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly refresh of map PDFs and USFS road/trail dates (Mondays 12:00 UTC).
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Re-download and re-tile every map
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  PMTILES_VERSION: 1.31.2
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install GDAL and pmtiles
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gdal-bin
+          curl -sSL "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin pmtiles
+          gdalinfo --version
+          gdalinfo --formats | grep -E '^\s*(PDF|MBTiles|WEBP)'
+          pmtiles version
+
+      # Reuse downloaded PDFs and generated tiles so unchanged maps aren't re-tiled.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            data/cache
+            public/maps
+          key: mvum-data-${{ github.run_id }}
+          restore-keys: mvum-data-
+
+      - run: npm ci
+
+      - name: Build map tiles and data snapshot
+        run: npm run data -- ${{ inputs.force && '--force' || '' }}
+
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

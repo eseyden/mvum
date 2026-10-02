@@ -41,6 +41,18 @@ npm run dev
 
 ## Deploying
 
+### GitHub Pages
+
+`.github/workflows/deploy.yml` installs GDAL and pmtiles, runs `npm run data`, builds, and deploys to Pages. It
+runs on every push to `main`, weekly (to pick up new map editions and road dates), and on demand from the
+Actions tab. Running it manually with **force** re-tiles every map. Downloaded PDFs and generated tiles are kept
+in the Actions cache between runs.
+
+One-time setup: in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**. The site is then served
+at `https://<user>.github.io/<repo>/`. The build uses relative paths, so any repo name works.
+
+### Other hosts
+
 `npm run build` writes a static site to `dist/`. The host must support HTTP range requests, which most
 static hosts do; the app uses them to stream maps that haven't been downloaded. Geolocation needs HTTPS
 (localhost is exempt).
