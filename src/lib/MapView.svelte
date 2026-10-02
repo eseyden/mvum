@@ -12,10 +12,10 @@
 
 <script lang="ts">
   import 'maplibre-gl/dist/maplibre-gl.css';
-  import { onMount, untrack } from 'svelte';
+  import { onMount } from 'svelte';
   import type { FeatureCollection } from 'geojson';
   import { getFile } from './store';
-  import type { LngLat } from './geo';
+  import { mapsAt, type LngLat } from './geo';
   import type { MapEntry } from './types';
 
   interface Props {
@@ -36,7 +36,9 @@
 
   let container: HTMLDivElement;
   let mlMap = $state<maplibregl.Map>();
-  let hasPosition = untrack(() => !!initialCenter);
+  let geolocate: maplibregl.GeolocateControl;
+  /** True while the GeolocateControl keeps the camera locked on the user. */
+  let tracking = false;
   let shownId: string | null = null;
 
   onMount(() => {
@@ -53,7 +55,7 @@
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
     m.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
-    const geolocate = new maplibregl.GeolocateControl({
+    geolocate = new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
       // The app draws its own marker so simulated positions are shown the same way.
@@ -61,8 +63,9 @@
       showAccuracyCircle: false,
     });
     m.addControl(geolocate, 'top-right');
+    geolocate.on('trackuserlocationstart', () => (tracking = true));
+    geolocate.on('trackuserlocationend', () => (tracking = false));
     geolocate.on('geolocate', (e) => {
-      hasPosition = true;
       onposition([e.coords.longitude, e.coords.latitude], e.coords.accuracy);
     });
 
@@ -136,6 +139,13 @@
     mlMap?.setFilter('routes-selected', ['==', ['get', 'key'], selectedKey ?? '']);
   });
 
+  /** Bring the camera back to the user and resume GPS tracking. */
+  export function recenter() {
+    if (!mlMap || !position) return;
+    if (geolocate && !tracking && geolocate.trigger()) return;
+    mlMap.flyTo({ center: position, zoom: Math.max(mlMap.getZoom(), 12) });
+  }
+
   async function showMap(m: maplibregl.Map, entry: MapEntry) {
     if (m.getLayer('mvum')) m.removeLayer('mvum');
     if (m.getSource('mvum')) m.removeSource('mvum');
@@ -154,7 +164,9 @@
     m.addSource('mvum', { type: 'raster', url: `pmtiles://${url}`, tileSize: 256 });
     m.addLayer({ id: 'mvum', type: 'raster', source: 'mvum' }, 'routes-status');
 
-    if (!hasPosition) {
+    // Frame the map unless the user is on it (then GPS tracking or the initial center already shows them).
+    // This programmatic move also takes the GeolocateControl out of its camera lock.
+    if (!position || !mapsAt([entry], position).length) {
       const ring = entry.footprint.type === 'Polygon' ? entry.footprint.coordinates[0] : entry.footprint.coordinates[0][0];
       const b = new maplibregl.LngLatBounds();
       ring.forEach(([x, y]) => b.extend([x, y]));

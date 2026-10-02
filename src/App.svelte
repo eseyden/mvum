@@ -21,6 +21,9 @@
   let accuracy = $state(0);
   let current = $state<MapEntry | null>(null);
   let preferredKind = $state<'mvum' | 'osvum'>('mvum');
+  /** Auto-switch to the map under the user; off after they pick a map they aren't on. */
+  let follow = $state(true);
+  let mapView = $state<ReturnType<typeof MapView>>();
   let pinnedKey = $state<string | null>(null);
   let panelOpen = $state(false);
   let refreshing = $state(false);
@@ -72,14 +75,20 @@
 
   // Follow the user onto whichever map covers their position.
   $effect(() => {
-    if (!here.length || (current && here.some((m) => m.id === current!.id))) return;
+    if (!follow || !here.length || (current && here.some((m) => m.id === current!.id))) return;
     current = here.find((m) => m.kind === preferredKind && m.pmtiles) ?? here.find((m) => m.pmtiles) ?? current;
   });
 
   function pick(m: MapEntry) {
     current = m;
     preferredKind = m.kind;
+    follow = here.some((h) => h.id === m.id);
     panelOpen = false;
+  }
+
+  function showMyMap() {
+    follow = true;
+    mapView?.recenter();
   }
 
   async function refresh() {
@@ -112,11 +121,15 @@
         {#if !online}· Offline{/if}
       </small>
     </button>
+    {#if !follow && position}
+      <button class="link" onclick={showMyMap}>Show my map</button>
+    {/if}
     <button class="primary" onclick={() => (panelOpen = !panelOpen)}>Maps</button>
   </header>
 
   {#if manifest && routeData}
     <MapView
+      bind:this={mapView}
       map={current}
       routes={routesFC}
       selectedKey={pinned?.key ?? nearest?.route.key ?? null}
