@@ -24,6 +24,8 @@
   /** Auto-switch to the map under the user; off after they pick a map they aren't on. */
   let follow = $state(true);
   let mapView = $state<ReturnType<typeof MapView>>();
+  let barHeight = $state(0);
+  let sheetHeight = $state(0);
   let pinnedKey = $state<string | null>(null);
   let panelOpen = $state(false);
   let refreshing = $state(false);
@@ -110,7 +112,7 @@
 </script>
 
 <main>
-  <header class="bar">
+  <header class="bar" bind:clientHeight={barHeight}>
     <button class="title" onclick={() => (panelOpen = !panelOpen)}>
       <span>{current?.title ?? 'Lolo MVUM'}</span>
       <small>
@@ -134,6 +136,7 @@
       routes={routesFC}
       selectedKey={pinned?.key ?? nearest?.route.key ?? null}
       initialCenter={position}
+      insets={{ top: barHeight, bottom: sheetHeight }}
       {position}
       onposition={(at, acc) => {
         position = at;
@@ -144,7 +147,7 @@
     />
   {/if}
 
-  <aside class="sheet" class:open={panelOpen}>
+  <aside class="sheet" class:open={panelOpen} bind:clientHeight={sheetHeight}>
     {#if loadError}
       <p class="error">{loadError}</p>
     {:else if panelOpen && manifest && routeData}

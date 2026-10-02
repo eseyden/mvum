@@ -6,6 +6,9 @@
   import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
   maplibregl.setWorkerUrl(workerUrl);
+  /** Zoom used around the user's position: roughly 10 km across on a phone. */
+  const LOCAL_ZOOM = 12;
+
   const protocol = new Protocol();
   maplibregl.addProtocol('pmtiles', protocol.tile);
 </script>
@@ -25,6 +28,8 @@
     selectedKey: string | null;
     /** Start centered here (e.g. a simulated position) instead of fitting the map. */
     initialCenter?: LngLat | null;
+    /** Screen space covered by overlaid UI, kept clear when framing the map. */
+    insets: { top: number; bottom: number };
     /** Current position (real or simulated) to mark on the map. */
     position: LngLat | null;
     onposition: (at: LngLat, accuracy: number) => void;
@@ -32,7 +37,7 @@
     ontileerror: (map: MapEntry) => void;
   }
 
-  let { map, routes, selectedKey, initialCenter = null, position, onposition, onselect, ontileerror }: Props = $props();
+  let { map, routes, selectedKey, initialCenter = null, insets, position, onposition, onselect, ontileerror }: Props = $props();
 
   let container: HTMLDivElement;
   let mlMap = $state<maplibregl.Map>();
@@ -50,13 +55,14 @@
         layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#ece8dc' } }],
       },
       center: initialCenter ?? [-114.0, 46.9],
-      zoom: initialCenter ? 13 : 8,
+      zoom: initialCenter ? LOCAL_ZOOM : 8,
       attributionControl: { compact: true, customAttribution: 'USDA Forest Service MVUM' },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
     m.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
     geolocate = new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
+      fitBoundsOptions: { maxZoom: LOCAL_ZOOM },
       trackUserLocation: true,
       // The app draws its own marker so simulated positions are shown the same way.
       showUserLocation: false,
@@ -143,7 +149,7 @@
   export function recenter() {
     if (!mlMap || !position) return;
     if (geolocate && !tracking && geolocate.trigger()) return;
-    mlMap.flyTo({ center: position, zoom: Math.max(mlMap.getZoom(), 12) });
+    mlMap.flyTo({ center: position, zoom: LOCAL_ZOOM });
   }
 
   async function showMap(m: maplibregl.Map, entry: MapEntry) {
@@ -164,14 +170,24 @@
     m.addSource('mvum', { type: 'raster', url: `pmtiles://${url}`, tileSize: 256 });
     m.addLayer({ id: 'mvum', type: 'raster', source: 'mvum' }, 'routes-status');
 
-    // Frame the map unless the user is on it (then GPS tracking or the initial center already shows them).
-    // This programmatic move also takes the GeolocateControl out of its camera lock.
-    if (!position || !mapsAt([entry], position).length) {
+    if (position && mapsAt([entry], position).length) {
+      // On this map: show the area around the user. Tagging the move as geolocate-driven keeps
+      // the GeolocateControl's camera lock (any other camera move releases it).
+      m.easeTo({ center: position, zoom: LOCAL_ZOOM }, { geolocateSource: true });
+    } else {
+      // Not on this map: show all of it. This also releases the GeolocateControl's camera lock.
       const ring = entry.footprint.type === 'Polygon' ? entry.footprint.coordinates[0] : entry.footprint.coordinates[0][0];
       const b = new maplibregl.LngLatBounds();
       ring.forEach(([x, y]) => b.extend([x, y]));
-      m.fitBounds(b, { padding: 20, duration: 0 });
+      m.fitBounds(b, { padding: framePadding(), duration: 0 });
     }
+  }
+
+  function framePadding() {
+    // The bottom sheet can still measure as the open Maps panel right after a pick; cap it at
+    // the closed sheet's max height (45vh).
+    const bottom = Math.min(insets.bottom, window.innerHeight * 0.45);
+    return { top: insets.top + 16, bottom: bottom + 16, left: 16, right: 56 };
   }
 </script>
 
