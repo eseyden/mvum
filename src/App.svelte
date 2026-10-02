@@ -19,6 +19,7 @@
 
   let position = $state<LngLat | null>(null);
   let accuracy = $state(0);
+  let locationError = $state('');
   let current = $state<MapEntry | null>(null);
   let preferredKind = $state<'mvum' | 'osvum'>('mvum');
   /** Auto-switch to the map under the user; off after they pick a map they aren't on. */
@@ -116,7 +117,7 @@
     <button class="title" onclick={() => (panelOpen = !panelOpen)}>
       <span>{current?.title ?? 'Lolo MVUM'}</span>
       <small>
-        {#if !position}Locating…{:else if !here.length}Outside all maps{:else if !here.some((m) => m.id === current?.id)}Not on this map{:else if here.length > 1}Also on {here
+        {#if !position}{locationError ? `Location unavailable: ${locationError}` : 'Locating…'}{:else if !here.length}Outside all maps{:else if !here.some((m) => m.id === current?.id)}Not on this map{:else if here.length > 1}Also on {here
             .filter((m) => m.id !== current?.id)
             .map((m) => m.title)
             .join(', ')}{:else}You are on this map{/if}
@@ -141,7 +142,10 @@
       onposition={(at, acc) => {
         position = at;
         accuracy = acc;
+        locationError = '';
       }}
+      onlocationerror={(message) => (locationError = message || 'Location unavailable')}
+      onlocate={showMyMap}
       onselect={(key) => (pinnedKey = key)}
       ontileerror={tileError}
     />

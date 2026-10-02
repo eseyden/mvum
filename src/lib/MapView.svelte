@@ -6,8 +6,8 @@
   import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
   maplibregl.setWorkerUrl(workerUrl);
-  /** Zoom used around the user's position: roughly 10 km across on a phone. */
-  const LOCAL_ZOOM = 12;
+  /** Zoom used around the user's position: ~26 m/px at this latitude, about 10 km across a phone. */
+  const LOCAL_ZOOM = 11;
 
   const protocol = new Protocol();
   maplibregl.addProtocol('pmtiles', protocol.tile);
@@ -15,7 +15,7 @@
 
 <script lang="ts">
   import 'maplibre-gl/dist/maplibre-gl.css';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import type { FeatureCollection } from 'geojson';
   import { getFile } from './store';
   import { mapsAt, type LngLat } from './geo';
@@ -33,17 +33,27 @@
     /** Current position (real or simulated) to mark on the map. */
     position: LngLat | null;
     onposition: (at: LngLat, accuracy: number) => void;
+    onlocationerror: (message: string) => void;
+    /** The locate button was pressed. */
+    onlocate: () => void;
     onselect: (key: string | null) => void;
     ontileerror: (map: MapEntry) => void;
   }
 
-  let { map, routes, selectedKey, initialCenter = null, insets, position, onposition, onselect, ontileerror }: Props = $props();
+  let { map, routes, selectedKey, initialCenter = null, insets, position, onposition, onlocationerror, onlocate, onselect, ontileerror }: Props =
+    $props();
 
   let container: HTMLDivElement;
   let mlMap = $state<maplibregl.Map>();
-  let geolocate: maplibregl.GeolocateControl;
-  /** True while the GeolocateControl keeps the camera locked on the user. */
-  let tracking = false;
+  /**
+   * Whether the camera follows the user's position. MapLibre's GeolocateControl isn't used for
+   * this: it keeps its camera lock through any move that changes zoom (such as fitting a map the
+   * user isn't on), so the next GPS fix would pull the view back to the user.
+   */
+  let followCamera = true;
+  /** Simulated positions are already centered on; real ones get centered on the first fix. */
+  let centeredOnFix = untrack(() => !!initialCenter);
+  let locateButton: HTMLButtonElement | undefined;
   let shownId: string | null = null;
 
   onMount(() => {
@@ -60,20 +70,13 @@
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
     m.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
-    geolocate = new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      fitBoundsOptions: { maxZoom: LOCAL_ZOOM },
-      trackUserLocation: true,
-      // The app draws its own marker so simulated positions are shown the same way.
-      showUserLocation: false,
-      showAccuracyCircle: false,
-    });
-    m.addControl(geolocate, 'top-right');
-    geolocate.on('trackuserlocationstart', () => (tracking = true));
-    geolocate.on('trackuserlocationend', () => (tracking = false));
-    geolocate.on('geolocate', (e) => {
-      onposition([e.coords.longitude, e.coords.latitude], e.coords.accuracy);
-    });
+    m.addControl(locateControl(), 'top-right');
+    m.on('dragstart', () => setFollowCamera(false));
+    const watchId = navigator.geolocation?.watchPosition(
+      (p) => onposition([p.coords.longitude, p.coords.latitude], p.coords.accuracy),
+      (err) => onlocationerror(err.message),
+      { enableHighAccuracy: true, maximumAge: 10_000 },
+    );
 
     m.on('load', () => {
       m.addSource('routes', { type: 'geojson', data: routes });
@@ -113,10 +116,12 @@
         if (map && 'sourceId' in e && e.sourceId === 'mvum') ontileerror(map);
       });
       mlMap = m;
-      geolocate.trigger();
     });
 
-    return () => m.remove();
+    return () => {
+      if (watchId !== undefined) navigator.geolocation.clearWatch(watchId);
+      m.remove();
+    };
   });
 
   $effect(() => {
@@ -137,6 +142,22 @@
     } else marker.setLngLat(position);
   });
 
+  // Keep the user in view while following. Only the center moves, so the user's zoom is kept.
+  $effect(() => {
+    const m = mlMap;
+    const at = position;
+    if (!m || !at || !followCamera || m.isMoving()) return;
+    if (!centeredOnFix) {
+      centeredOnFix = true;
+      // First fix: show the area around the user if they're on this map, else leave the map framed.
+      const entry = untrack(() => map); // react to position only, not map switches
+      if (entry && mapsAt([entry], at).length) m.easeTo({ center: at, zoom: LOCAL_ZOOM });
+      else setFollowCamera(false);
+    } else {
+      m.easeTo({ center: at, duration: 500 });
+    }
+  });
+
   $effect(() => {
     (mlMap?.getSource('routes') as maplibregl.GeoJSONSource | undefined)?.setData(routes);
   });
@@ -145,11 +166,31 @@
     mlMap?.setFilter('routes-selected', ['==', ['get', 'key'], selectedKey ?? '']);
   });
 
-  /** Bring the camera back to the user and resume GPS tracking. */
+  /** Bring the camera back to the user and follow them again. */
   export function recenter() {
-    if (!mlMap || !position) return;
-    if (geolocate && !tracking && geolocate.trigger()) return;
-    mlMap.flyTo({ center: position, zoom: LOCAL_ZOOM });
+    setFollowCamera(true);
+    centeredOnFix = true;
+    if (mlMap && position) mlMap.flyTo({ center: position, zoom: LOCAL_ZOOM });
+  }
+
+  function setFollowCamera(on: boolean) {
+    followCamera = on;
+    locateButton?.classList.toggle('maplibregl-ctrl-geolocate-active', on);
+  }
+
+  /** Locate button styled like MapLibre's GeolocateControl. */
+  function locateControl(): maplibregl.IControl {
+    const group = document.createElement('div');
+    group.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+    locateButton = document.createElement('button');
+    locateButton.type = 'button';
+    locateButton.className = 'maplibregl-ctrl-geolocate maplibregl-ctrl-geolocate-active';
+    locateButton.title = locateButton.ariaLabel = 'Show my location';
+    locateButton.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true"></span>';
+    locateButton.disabled = !('geolocation' in navigator);
+    locateButton.onclick = () => onlocate();
+    group.append(locateButton);
+    return { onAdd: () => group, onRemove: () => group.remove() };
   }
 
   async function showMap(m: maplibregl.Map, entry: MapEntry) {
@@ -171,11 +212,13 @@
     m.addLayer({ id: 'mvum', type: 'raster', source: 'mvum' }, 'routes-status');
 
     if (position && mapsAt([entry], position).length) {
-      // On this map: show the area around the user. Tagging the move as geolocate-driven keeps
-      // the GeolocateControl's camera lock (any other camera move releases it).
-      m.easeTo({ center: position, zoom: LOCAL_ZOOM }, { geolocateSource: true });
+      // On this map: show the area around the user and follow them.
+      setFollowCamera(true);
+      centeredOnFix = true;
+      m.easeTo({ center: position, zoom: LOCAL_ZOOM });
     } else {
-      // Not on this map: show all of it. This also releases the GeolocateControl's camera lock.
+      // Not on this map: show all of it, and stop following so GPS updates don't pull the view away.
+      setFollowCamera(false);
       const ring = entry.footprint.type === 'Polygon' ? entry.footprint.coordinates[0] : entry.footprint.coordinates[0][0];
       const b = new maplibregl.LngLatBounds();
       ring.forEach(([x, y]) => b.extend([x, y]));
