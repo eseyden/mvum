@@ -1,0 +1,479 @@
+{
+  "generatedAt": "2026-10-02T16:56:22.530Z",
+  "sourcePage": "https://www.fs.usda.gov/r01/lolo/maps-guides/travel-management-maps",
+  "api": {
+    "service": "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MVUM_02/MapServer",
+    "where": "FORESTNAME LIKE 'Lolo%'",
+    "roads": {
+      "count": 1605,
+      "calls": [
+        "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MVUM_02/MapServer/1/query?where=FORESTNAME+LIKE+%27Lolo%25%27&outFields=*&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=objectid&resultOffset=0&resultRecordCount=1000&f=geojson",
+        "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MVUM_02/MapServer/1/query?where=FORESTNAME+LIKE+%27Lolo%25%27&outFields=*&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=objectid&resultOffset=1000&resultRecordCount=1000&f=geojson"
+      ]
+    },
+    "trails": {
+      "count": 492,
+      "calls": [
+        "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MVUM_02/MapServer/2/query?where=FORESTNAME+LIKE+%27Lolo%25%27&outFields=*&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=objectid&resultOffset=0&resultRecordCount=1000&f=geojson"
+      ]
+    }
+  },
+  "maps": [
+    {
+      "id": "mvum-missoula-west",
+      "title": "Missoula West",
+      "kind": "mvum",
+      "mediaId": "232632",
+      "source": "https://www.fs.usda.gov/media/232632",
+      "pdf": "maps/mvum-missoula-west.pdf",
+      "pdfBytes": 2500265,
+      "pmtiles": "maps/mvum-missoula-west.pmtiles",
+      "pmtilesBytes": 5875622,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -114.64429,
+              46.490637
+            ],
+            [
+              -114.705212,
+              47.122867
+            ],
+            [
+              -113.635394,
+              47.166448
+            ],
+            [
+              -113.58694,
+              46.533699
+            ],
+            [
+              -114.64429,
+              46.490637
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mvum-rock-creek",
+      "title": "Rock Creek",
+      "kind": "mvum",
+      "mediaId": "232631",
+      "source": "https://www.fs.usda.gov/media/232631",
+      "pdf": "maps/mvum-rock-creek.pdf",
+      "pdfBytes": 1384314,
+      "pmtiles": "maps/mvum-rock-creek.pmtiles",
+      "pmtilesBytes": 2769723,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -114.09086,
+              46.3277
+            ],
+            [
+              -114.137512,
+              46.872896
+            ],
+            [
+              -113.395033,
+              46.900658
+            ],
+            [
+              -113.35583,
+              46.355169
+            ],
+            [
+              -114.09086,
+              46.3277
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mvum-ninemile-north",
+      "title": "Ninemile North",
+      "kind": "mvum",
+      "mediaId": "232634",
+      "source": "https://www.fs.usda.gov/media/232634",
+      "pdf": "maps/mvum-ninemile-north.pdf",
+      "pdfBytes": 1453782,
+      "pmtiles": "maps/mvum-ninemile-north.pmtiles",
+      "pmtilesBytes": 3043959,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -114.767151,
+              46.879017
+            ],
+            [
+              -114.817223,
+              47.383948
+            ],
+            [
+              -114.122843,
+              47.413907
+            ],
+            [
+              -114.079282,
+              46.908697
+            ],
+            [
+              -114.767151,
+              46.879017
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mvum-ninemile-south",
+      "title": "Ninemile South",
+      "kind": "mvum",
+      "mediaId": "232635",
+      "source": "https://www.fs.usda.gov/media/232635",
+      "pdf": "maps/mvum-ninemile-south.pdf",
+      "pdfBytes": 1690787,
+      "pmtiles": "maps/mvum-ninemile-south.pmtiles",
+      "pmtilesBytes": 3032832,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -114.88692,
+              46.688587
+            ],
+            [
+              -114.928532,
+              47.101057
+            ],
+            [
+              -114.231033,
+              47.131977
+            ],
+            [
+              -114.194741,
+              46.719276
+            ],
+            [
+              -114.88692,
+              46.688587
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mvum-plains-thompson-falls-rd",
+      "title": "Plains/Thompson Falls RD",
+      "kind": "mvum",
+      "mediaId": "232638",
+      "source": "https://www.fs.usda.gov/media/232638",
+      "pdf": "maps/mvum-plains-thompson-falls-rd.pdf",
+      "pdfBytes": 3268932,
+      "pmtiles": "maps/mvum-plains-thompson-falls-rd.pmtiles",
+      "pmtilesBytes": 4492039,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -115.745562,
+              47.194729
+            ],
+            [
+              -115.84189,
+              48.003888
+            ],
+            [
+              -114.687721,
+              48.060967
+            ],
+            [
+              -114.608813,
+              47.250957
+            ],
+            [
+              -115.745562,
+              47.194729
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mvum-superior-rd",
+      "title": "Superior RD",
+      "kind": "mvum",
+      "mediaId": "232637",
+      "source": "https://www.fs.usda.gov/media/232637",
+      "pdf": "maps/mvum-superior-rd.pdf",
+      "pdfBytes": 3125192,
+      "pmtiles": "maps/mvum-superior-rd.pmtiles",
+      "pmtilesBytes": 9289991,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -115.73887,
+              46.858229
+            ],
+            [
+              -115.821773,
+              47.561219
+            ],
+            [
+              -114.621953,
+              47.620617
+            ],
+            [
+              -114.554681,
+              46.916856
+            ],
+            [
+              -115.73887,
+              46.858229
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "mvum-seeley-lake-rd",
+      "title": "Seeley Lake RD MVUM",
+      "kind": "mvum",
+      "mediaId": "232640",
+      "source": "https://www.fs.usda.gov/media/232640",
+      "pdf": "maps/mvum-seeley-lake-rd.pdf",
+      "pdfBytes": 1573156,
+      "pmtiles": "maps/mvum-seeley-lake-rd.pmtiles",
+      "pmtilesBytes": 4263977,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -113.744372,
+              46.903648
+            ],
+            [
+              -113.792194,
+              47.501078
+            ],
+            [
+              -112.854234,
+              47.532118
+            ],
+            [
+              -112.816833,
+              46.934348
+            ],
+            [
+              -113.744372,
+              46.903648
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "osvum-ninemile-ranger-district",
+      "title": "Ninemile Ranger District OSVUM",
+      "kind": "osvum",
+      "mediaId": "234588",
+      "source": "https://www.fs.usda.gov/media/234588",
+      "pdf": "maps/osvum-ninemile-ranger-district.pdf",
+      "pdfBytes": 8569902,
+      "pmtiles": "maps/osvum-ninemile-ranger-district.pmtiles",
+      "pmtilesBytes": 6904098,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -115.03372,
+              46.599027
+            ],
+            [
+              -115.109183,
+              47.324158
+            ],
+            [
+              -114.048524,
+              47.370967
+            ],
+            [
+              -113.987251,
+              46.645218
+            ],
+            [
+              -115.03372,
+              46.599027
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "osvum-missoula-ranger-district",
+      "title": "Missoula Ranger District OSVUM",
+      "kind": "osvum",
+      "mediaId": "234587",
+      "source": "https://www.fs.usda.gov/media/234587",
+      "pdf": "maps/osvum-missoula-ranger-district.pdf",
+      "pdfBytes": 6635687,
+      "pmtiles": "maps/osvum-missoula-ranger-district.pmtiles",
+      "pmtilesBytes": 8452579,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -114.862671,
+              46.284668
+            ],
+            [
+              -114.943722,
+              47.091968
+            ],
+            [
+              -113.354234,
+              47.156438
+            ],
+            [
+              -113.29675,
+              46.348189
+            ],
+            [
+              -114.862671,
+              46.284668
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "osvum-plains-ranger-district",
+      "title": "Plains Ranger District OSVUM",
+      "kind": "osvum",
+      "mediaId": "234586",
+      "source": "https://www.fs.usda.gov/media/234586",
+      "pdf": "maps/osvum-plains-ranger-district.pdf",
+      "pdfBytes": 9987649,
+      "pmtiles": "maps/osvum-plains-ranger-district.pmtiles",
+      "pmtilesBytes": 7799535,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -115.794832,
+              47.157639
+            ],
+            [
+              -115.897771,
+              48.015228
+            ],
+            [
+              -114.703301,
+              48.074657
+            ],
+            [
+              -114.619473,
+              47.216127
+            ],
+            [
+              -115.794832,
+              47.157639
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "osvum-superior-ranger-district",
+      "title": "Superior Ranger District OSVUM",
+      "kind": "osvum",
+      "mediaId": "234585",
+      "source": "https://www.fs.usda.gov/media/234585",
+      "pdf": "maps/osvum-superior-ranger-district.pdf",
+      "pdfBytes": 10365270,
+      "pmtiles": "maps/osvum-superior-ranger-district.pmtiles",
+      "pmtilesBytes": 7642141,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -115.826381,
+              46.771989
+            ],
+            [
+              -115.920703,
+              47.560739
+            ],
+            [
+              -114.574393,
+              47.627677
+            ],
+            [
+              -114.499731,
+              46.837956
+            ],
+            [
+              -115.826381,
+              46.771989
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "osvum-seeley-lake-ranger-district",
+      "title": "Seeley Lake Ranger District OSVUM",
+      "kind": "osvum",
+      "mediaId": "234584",
+      "source": "https://www.fs.usda.gov/media/234584",
+      "pdf": "maps/osvum-seeley-lake-ranger-district.pdf",
+      "pdfBytes": 5685831,
+      "pmtiles": "maps/osvum-seeley-lake-ranger-district.pmtiles",
+      "pmtilesBytes": 3807096,
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -113.740201,
+              46.810888
+            ],
+            [
+              -113.794054,
+              47.484648
+            ],
+            [
+              -112.805764,
+              47.517158
+            ],
+            [
+              -112.764273,
+              46.842999
+            ],
+            [
+              -113.740201,
+              46.810888
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
